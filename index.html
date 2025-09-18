@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>12-Week Pushup Challenge</title>
+    <link rel="icon" type="image/png" href="pushup_icon_dark.png">
+    <link rel="stylesheet" href="style.css">
+    <style>
+      #webcamFeed, #fullscreenWebcamFeed {
+        transform: scaleX(-1);
+      }
+      .webcam-control-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 8px;
+      }
+      .webcam-toggle-btn, .webcam-fullscreen-btn {
+        padding: 6px 14px;
+        font-size: 1rem;
+        border-radius: 5px;
+        border: none;
+        background: #eee;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .webcam-toggle-btn:hover, .webcam-fullscreen-btn:hover {
+        background: #ddd;
+      }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+
+        <!-- Home Page -->
+        <div class="page" id="homePage">
+            <!-- ... unchanged ... -->
+        </div>
+
+        <!-- Rest Activities Page -->
+        <div class="page hidden" id="restActivitiesPage">
+            <!-- ... unchanged ... -->
+        </div>
+
+        <!-- Day Selection Page -->
+        <div class="page hidden" id="daySelectionPage">
+            <!-- ... unchanged ... -->
+        </div>
+
+        <!-- Today's Workout Page -->
+        <div class="page hidden" id="todayWorkoutPage">
+            <!-- ... unchanged ... -->
+        </div>
+
+        <!-- Exercise Page -->
+        <div class="page hidden" id="exercisePage">
+            <main class="exercise-main">
+                <div class="exercise-layout">
+                    <div class="exercise-demo">
+                        <div class="exercise-header">
+                            <button id="exerciseBackBtn" class="back-btn">← Back</button>
+                            <div class="exercise-progress" id="exerciseProgress">Exercise 1 of 3</div>
+                        </div>
+                        
+                        <div class="exercise-title-row">
+                            <div class="exercise-info-inline">
+                                <h2 id="exerciseName">Wall Pushups</h2>
+                                <div class="demo-target-inline" id="demoTarget">Do this 24 times</div>
+                            </div>
+                            <div class="webcam-control-row">
+                                <button class="webcam-toggle-btn" id="webcamToggleBtn" onclick="toggleWebcam()">Start Webcam</button>
+                                <button class="webcam-fullscreen-btn" onclick="toggleFullscreenWebcam()">📹 Full Screen</button>
+                            </div>
+                        </div>
+                        
+                        <div class="webcam-container">
+                            <video id="webcamFeed" autoplay muted playsinline style="display:none;"></video>
+                            <div class="webcam-error" id="webcamError" style="display: none;">
+                                <p>📷 Camera not available</p>
+                                <p>Enable camera permissions to see yourself during workout</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="exercise-details">
+                        <!-- ... unchanged ... -->
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Workout Complete Page -->
+        <div class="page hidden" id="completePage">
+            <!-- ... unchanged ... -->
+        </div>
+
+    </div>
+
+    <!-- Fullscreen Webcam Modal -->
+    <div id="fullscreenWebcamModal" class="webcam-modal hidden">
+        <div class="modal-content">
+            <button class="modal-close" onclick="toggleFullscreenWebcam()">✕</button>
+            <video id="fullscreenWebcamFeed" autoplay muted playsinline></video>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+      // Webcam state
+      let webcamStream = null;
+
+      // Start webcam
+      async function startWebcam() {
+        try {
+          webcamStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const video = document.getElementById('webcamFeed');
+          video.srcObject = webcamStream;
+          video.style.display = "block";
+          document.getElementById('webcamToggleBtn').textContent = "Stop Webcam";
+          document.getElementById('webcamError').style.display = "none";
+        } catch (err) {
+          document.getElementById('webcamError').style.display = "block";
+        }
+      }
+
+      // Stop webcam
+      function stopWebcam() {
+        if (webcamStream) {
+          let tracks = webcamStream.getTracks();
+          tracks.forEach(track => track.stop());
+          webcamStream = null;
+        }
+        const video = document.getElementById('webcamFeed');
+        video.srcObject = null;
+        video.style.display = "none";
+        document.getElementById('webcamToggleBtn').textContent = "Start Webcam";
+      }
+
+      // Toggle webcam
+      function toggleWebcam() {
+        const video = document.getElementById('webcamFeed');
+        if (video.style.display === "none" || !video.srcObject) {
+          startWebcam();
+        } else {
+          stopWebcam();
+        }
+      }
+
+      // Fullscreen webcam logic (assumes you also want to mirror in fullscreen)
+      function toggleFullscreenWebcam() {
+        const modal = document.getElementById('fullscreenWebcamModal');
+        const fullscreenVideo = document.getElementById('fullscreenWebcamFeed');
+        if (modal.classList.contains('hidden')) {
+          // Show fullscreen modal
+          modal.classList.remove('hidden');
+          // Use same stream if active
+          const video = document.getElementById('webcamFeed');
+          if (video.srcObject) {
+            fullscreenVideo.srcObject = video.srcObject;
+          } else {
+            // If not active, prompt for webcam
+            startFullscreenWebcam();
+          }
+        } else {
+          // Hide modal
+          modal.classList.add('hidden');
+          fullscreenVideo.srcObject = null;
+        }
+      }
+
+      // Helper to start webcam in fullscreen if not already active
+      async function startFullscreenWebcam() {
+        try {
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          document.getElementById('fullscreenWebcamFeed').srcObject = stream;
+        } catch (err) {
+          // Optionally show error
+        }
+      }
+    </script>
+</body>
+</html>
